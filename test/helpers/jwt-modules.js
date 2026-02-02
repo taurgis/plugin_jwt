@@ -4,17 +4,17 @@ const { createDwMocks } = require('./dw-mocks');
 function loadJwtModules() {
   const mocks = createDwMocks();
 
-  const jwtHelper = proxyquire('../../plugin_jwt/cartridge/scripts/jwt/jwtHelper', {
+  const jwtHelper = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/jwt/jwtHelper', {
     'dw/crypto/Mac': mocks.Mac,
     'dw/crypto/Encoding': mocks.Encoding
   });
 
-  const decode = proxyquire('../../plugin_jwt/cartridge/scripts/jwt/decode', {
+  const decode = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/jwt/decode', {
     '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     'dw/system/Logger': mocks.Logger
   });
 
-  const sign = proxyquire('../../plugin_jwt/cartridge/scripts/jwt/sign', {
+  const sign = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/jwt/sign', {
     '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     'dw/system/Logger': mocks.Logger,
     'dw/crypto/Encoding': mocks.Encoding,
@@ -25,7 +25,7 @@ function loadJwtModules() {
     'dw/crypto/KeyRef': mocks.KeyRef
   });
 
-  const verify = proxyquire('../../plugin_jwt/cartridge/scripts/jwt/verify', {
+  const verify = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/jwt/verify', {
     '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     '*/cartridge/scripts/jwt/decode': decode,
     'dw/system/Logger': mocks.Logger,
@@ -42,7 +42,7 @@ function loadJwtModules() {
     }
   });
 
-  const rsaToDer = proxyquire('../../plugin_jwt/cartridge/scripts/helpers/rsaToDer', {
+  const rsaToDer = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/helpers/rsaToDer', {
     'dw/crypto/Encoding': mocks.Encoding,
     '*/cartridge/scripts/jwt/jwtHelper': jwtHelper
   });
