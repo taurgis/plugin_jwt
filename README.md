@@ -18,6 +18,9 @@ References:
 2. https://www.chaijs.com/guide/installation/
 3. https://datatracker.ietf.org/doc/html/rfc7519
 4. https://datatracker.ietf.org/doc/html/rfc7515
+5. https://joseauth.org/modules/jwt_sign.html
+6. https://joseauth.org/modules/jwt_verify.html
+7. https://www.rfc-editor.org/rfc/rfc7518
 
 # Usage
 
