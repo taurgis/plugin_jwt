@@ -4,6 +4,21 @@ An implementation of [JSON Web Tokens](https://tools.ietf.org/html/rfc7519) for 
 # Install
 Install the cartridge on server & add it to cartridge path.
 
+## Testing
+
+Run the Node-only unit tests with Mocha and Chai:
+
+```sh
+npm test
+```
+
+References:
+
+1. https://mochajs.org/#getting-started
+2. https://www.chaijs.com/guide/installation/
+3. https://datatracker.ietf.org/doc/html/rfc7519
+4. https://datatracker.ietf.org/doc/html/rfc7515
+
 # Usage
 
 ### jwt.sign(payload, options)
@@ -49,6 +64,7 @@ Returns a boolean signifying if the signature is valid or not.
 * `ignoreExpiration` is a boolean to skip JWT expiration time verification.
 * `audience` is a string containing JWT audience.
 * `issuer` is a string containing JWT issuer.
+* `allowedAlgorithms` is an optional string or array to allowlist acceptable `alg` values.
 
 Verify HMAC SHA256
 
@@ -97,13 +113,19 @@ PS384 | RSA-PSS using SHA-384 hash algorithm
 
 ## Example
 
-Check `JWTTest.js` controller for SFRA example.
+Check `JWTTest.js` controller for SFRA example. Set site preference `enableJWTTest` to `true` to enable the sample endpoints.
 
 ## Resources
 
 1. https://jwt.io/
 2. https://jwt.io/introduction/
 3. https://github.com/auth0/node-jsonwebtoken
+4. https://www.rfc-editor.org/rfc/rfc7519
+5. https://www.rfc-editor.org/rfc/rfc7515
+6. https://www.rfc-editor.org/rfc/rfc7518
+7. https://www.rfc-editor.org/rfc/rfc7517
+8. https://www.rfc-editor.org/rfc/rfc4648
+9. https://www.rfc-editor.org/rfc/rfc8725
 
 ## Note
 

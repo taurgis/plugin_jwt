@@ -1,0 +1,60 @@
+const proxyquire = require('proxyquire').noCallThru();
+const { createDwMocks } = require('./dw-mocks');
+
+function loadJwtModules() {
+  const mocks = createDwMocks();
+
+  const jwtHelper = proxyquire('../../plugin_jwt/cartridge/scripts/jwt/jwtHelper', {
+    'dw/crypto/Mac': mocks.Mac,
+    'dw/crypto/Encoding': mocks.Encoding
+  });
+
+  const decode = proxyquire('../../plugin_jwt/cartridge/scripts/jwt/decode', {
+    '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
+    'dw/system/Logger': mocks.Logger
+  });
+
+  const sign = proxyquire('../../plugin_jwt/cartridge/scripts/jwt/sign', {
+    '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
+    'dw/system/Logger': mocks.Logger,
+    'dw/crypto/Encoding': mocks.Encoding,
+    'dw/util/Bytes': mocks.Bytes,
+    'dw/crypto/Signature': mocks.Signature,
+    'dw/util/StringUtils': mocks.StringUtils,
+    'dw/crypto/Mac': mocks.Mac
+  });
+
+  const verify = proxyquire('../../plugin_jwt/cartridge/scripts/jwt/verify', {
+    '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
+    '*/cartridge/scripts/jwt/decode': decode,
+    'dw/system/Logger': mocks.Logger,
+    'dw/util/Bytes': mocks.Bytes,
+    'dw/crypto/Encoding': mocks.Encoding,
+    'dw/crypto/Signature': mocks.Signature,
+    'dw/util/StringUtils': mocks.StringUtils,
+    'dw/crypto/Mac': mocks.Mac,
+    '*/cartridge/scripts/helpers/rsaToDer': {
+      getRSAPublicKey: function () {
+        return null;
+      }
+    }
+  });
+
+  const rsaToDer = proxyquire('../../plugin_jwt/cartridge/scripts/helpers/rsaToDer', {
+    'dw/crypto/Encoding': mocks.Encoding,
+    '*/cartridge/scripts/jwt/jwtHelper': jwtHelper
+  });
+
+  return {
+    mocks: mocks,
+    jwtHelper: jwtHelper,
+    decode: decode,
+    sign: sign,
+    verify: verify,
+    rsaToDer: rsaToDer
+  };
+}
+
+module.exports = {
+  loadJwtModules: loadJwtModules
+};

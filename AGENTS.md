@@ -55,6 +55,10 @@ This approach ensures:
 
 This project uses the **SFCC Development MCP Server** to provide accurate, up-to-date information about Salesforce B2C Commerce Cloud (SFCC) development. When working on SFCC-related tasks, **always use the available MCP tools** instead of relying on potentially outdated or inaccurate information from your training data.
 
+#### Rules
+
+Never automatically switch to "PLAN MODE" or "Planning Agent" !IMPORTANT! Always stay in Agent mode, no matter what! Even when a research sub agent has to run.
+
 ## 🎯 Why Use the MCP Tools
 
 - **Accuracy**: Get current, verified SFCC API documentation and skills

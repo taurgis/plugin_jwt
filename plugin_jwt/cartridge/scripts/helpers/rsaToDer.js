@@ -4,84 +4,115 @@
  * https://stackoverflow.com/questions/18835132/xml-to-pem-in-node-js
  * https://github.com/tracker1/node-rsa-pem-from-mod-exp
  */
+
+'use strict';
+
 var Encoding = require('dw/crypto/Encoding');
-function getRSAPublicKey(modulus_b64, exponent_b64) {
 
+/**
+ * Builds a DER-encoded RSA public key from base64url modulus and exponent.
+ * @param {string} modulusB64 - Base64url modulus.
+ * @param {string} exponentB64 - Base64url exponent.
+ * @returns {string|null} Base64 DER public key or null when inputs are invalid.
+ */
+function getRSAPublicKey(modulusB64, exponentB64) {
+    var jwtHelper = require('*/cartridge/scripts/jwt/jwtHelper');
+
+    /**
+     * Pads a hex string to preserve sign.
+     * @param {string} hexStr - Hex string.
+     * @returns {string} Padded hex string.
+     */
     function prepadSigned(hexStr) {
-        msb = hexStr[0]
+        var msb = hexStr[0];
         if (
-            (msb>='8' && msb<='9') || 
-            (msb>='a' && msb<='f') || 
-            (msb>='A'&&msb<='F')) {
-            return '00'+hexStr;
-        } else {
-            return hexStr;
+            (msb >= '8' && msb <= '9')
+            || (msb >= 'a' && msb <= 'f')
+            || (msb >= 'A' && msb <= 'F')
+        ) {
+            return '00' + hexStr;
         }
+
+        return hexStr;
     }
 
+    /**
+     * Converts a number to hex.
+     * @param {number} number - Number to convert.
+     * @returns {string} Hex string.
+     */
     function toHex(number) {
-        var nstr = number.toString(16)
-        if (nstr.length%2==0) return nstr
-        return '0'+nstr
-    }
-
-    // encode ASN.1 DER length field
-    // if <=127, short form
-    // if >=128, long form
-    function encodeLengthHex(n) {
-        if (n<=127) return toHex(n)
-        else {
-            n_hex = toHex(n)
-            length_of_length_byte = 128 + n_hex.length/2 // 0x80+numbytes
-            return toHex(length_of_length_byte)+n_hex
+        var nstr = number.toString(16);
+        if (nstr.length % 2 === 0) {
+            return nstr;
         }
+
+        return '0' + nstr;
     }
 
-    var modulus = Encoding.fromBase64(modulus_b64);
-    var exponent = Encoding.fromBase64(exponent_b64);
+    /**
+     * Encodes ASN.1 DER length field.
+     * @param {number} length - Field length.
+     * @returns {string} Hex-encoded length.
+     */
+    function encodeLengthHex(length) {
+        if (length <= 127) {
+            return toHex(length);
+        }
 
+        var nHex = toHex(length);
+        var lengthOfLengthByte = 128 + (nHex.length / 2); // 0x80 + numbytes
+        return toHex(lengthOfLengthByte) + nHex;
+    }
 
-    var modulus_hex = Encoding.toHex(modulus);
-    var exponent_hex = Encoding.toHex(exponent);
+    var modulus = jwtHelper.fromBase64Url(modulusB64);
+    var exponent = jwtHelper.fromBase64Url(exponentB64);
 
-    modulus_hex = prepadSigned(modulus_hex)
-    exponent_hex = prepadSigned(exponent_hex)
+    if (!modulus || !exponent) {
+        return null;
+    }
 
-    var modlen = modulus_hex.length/2
-    var explen = exponent_hex.length/2
+    var modulusHex = Encoding.toHex(modulus);
+    var exponentHex = Encoding.toHex(exponent);
 
-    var encoded_modlen = encodeLengthHex(modlen)
-    var encoded_explen = encodeLengthHex(explen)
-    var encoded_pubkey = '30' + 
-        encodeLengthHex(
-            modlen + 
-            explen + 
-            encoded_modlen.length/2 + 
-            encoded_explen.length/2 + 2
-        ) + 
-        '02' + encoded_modlen + modulus_hex +
-        '02' + encoded_explen + exponent_hex;
+    modulusHex = prepadSigned(modulusHex);
+    exponentHex = prepadSigned(exponentHex);
 
-    var seq2 = 
-        '30 0d ' +
-          '06 09 2a 86 48 86 f7 0d 01 01 01' +
-          '05 00 ' +
-        '03' + encodeLengthHex(encoded_pubkey.length/2 + 1) +
-        '00' + encoded_pubkey;
+    var modlen = modulusHex.length / 2;
+    var explen = exponentHex.length / 2;
 
-    seq2 = seq2.replace(/ /g,'');
+    var encodedModlen = encodeLengthHex(modlen);
+    var encodedExplen = encodeLengthHex(explen);
+    var encodedPubkey = '30'
+        + encodeLengthHex(
+            modlen
+            + explen
+            + (encodedModlen.length / 2)
+            + (encodedExplen.length / 2)
+            + 2
+        )
+        + '02' + encodedModlen + modulusHex
+        + '02' + encodedExplen + exponentHex;
 
-    var der_hex = '30' + encodeLengthHex(seq2.length/2) + seq2;
+    var seq2 = '30 0d '
+        + '06 09 2a 86 48 86 f7 0d 01 01 01'
+        + '05 00 '
+        + '03' + encodeLengthHex((encodedPubkey.length / 2) + 1)
+        + '00' + encodedPubkey;
 
-    der_hex = der_hex.replace(/ /g, '');
+    seq2 = seq2.replace(/ /g, '');
 
-    var der_b64 = Encoding.toBase64(Encoding.fromHex(der_hex));
+    var derHex = '30' + encodeLengthHex(seq2.length / 2) + seq2;
 
-    // var pem = '-----BEGIN PUBLIC KEY-----\n' 
-    //     + der_b64.match(/.{1,64}/g).join('\n') 
+    derHex = derHex.replace(/ /g, '');
+
+    var derB64 = Encoding.toBase64(Encoding.fromHex(derHex));
+
+    // var pem = '-----BEGIN PUBLIC KEY-----\n'
+    //     + derB64.match(/.{1,64}/g).join('\n')
     //     + '\n-----END PUBLIC KEY-----\n';
 
-    return der_b64
+    return derB64;
 }
 
 module.exports.getRSAPublicKey = getRSAPublicKey;
