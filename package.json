@@ -1,7 +1,7 @@
 {
-  "name": "plugin_temp",
+  "name": "plugin_jwt",
   "version": "0.0.1",
-  "description": "New overlay cartridge",
+  "description": "JWT Plugin for SFCC",
   "main": "index.js",
   "scripts": {
     "lint": "npm run lint:css && npm run lint:js",
@@ -9,9 +9,7 @@
     "lint:js": "sgmf-scripts --lint js",
     "lint:fix": "eslint cartridges --fix",
     "upload": "sgmf-scripts --upload -- ",
-    "uploadCartridge": "sgmf-scripts --uploadCartridge plugin_temp",
-    "compile:js": "sgmf-scripts --compile js",
-    "compile:scss": "sgmf-scripts --compile css"
+    "uploadCartridge": "sgmf-scripts --uploadCartridge plugin_jwt"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",
