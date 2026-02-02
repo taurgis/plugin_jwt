@@ -7,6 +7,7 @@ var Encoding = require('dw/crypto/Encoding');
 var Signature = require('dw/crypto/Signature');
 var StringUtils = require('dw/util/StringUtils');
 var Mac = require('dw/crypto/Mac');
+var CertificateRef = require('dw/crypto/CertificateRef');
 
 var JWTAlgoToSFCCMapping = jwtHelper.JWTAlgoToSFCCMapping;
 
@@ -71,7 +72,12 @@ function createRSAVerifier(signature, input, publicKey, algorithm) {
     var contentToVerifyInBytes = new Bytes(input);
 
     var apiSig = new Signature();
-    var verified = apiSig.verifyBytesSignature(jwtSignatureInBytes, contentToVerifyInBytes, new Bytes(publicKey), JWTAlgoToSFCCMapping[algorithm]);
+    var verified;
+    if (publicKey instanceof CertificateRef) {
+        verified = apiSig.verifyBytesSignature(jwtSignatureInBytes, contentToVerifyInBytes, publicKey, JWTAlgoToSFCCMapping[algorithm]);
+    } else {
+        verified = apiSig.verifyBytesSignature(jwtSignatureInBytes, contentToVerifyInBytes, new Bytes(publicKey), JWTAlgoToSFCCMapping[algorithm]);
+    }
     return verified;
 }
 
@@ -148,6 +154,8 @@ function verifyJWT(jwt, options) {
     var publicKeyOrSecret;
     if (config.publicKeyOrSecret && typeof config.publicKeyOrSecret === 'string') {
         publicKeyOrSecret = config.publicKeyOrSecret;
+    } else if (config.publicKeyOrSecret instanceof CertificateRef) {
+        publicKeyOrSecret = config.publicKeyOrSecret;
     } else if (config.publicKeyOrSecret && typeof config.publicKeyOrSecret === 'function') {
         var jsonWebKey = config.publicKeyOrSecret(decodedToken);
         if (jsonWebKey && jsonWebKey.modulus && jsonWebKey.exponential) {
@@ -163,6 +171,10 @@ function verifyJWT(jwt, options) {
     var verifier = JWTAlgoToVerifierMapping[algorithm];
     if (!verifier) {
         throw new Error(StringUtils.format('No verifier function found for supplied algorithm {0}', algorithm));
+    }
+
+    if (verifier === createHMACVerifier && typeof publicKeyOrSecret !== 'string') {
+        throw new Error('HMAC verification requires a shared secret string');
     }
 
     var verified = verifier(jwtSig, contentToVerify, publicKeyOrSecret, algorithm);

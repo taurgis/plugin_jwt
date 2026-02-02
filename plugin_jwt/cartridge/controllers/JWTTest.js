@@ -50,6 +50,46 @@ server.get('RSA', function (req, res, next) {
     return next();
 });
 
+server.get('RSAKeyRef', function (req, res, next) {
+    if (!isJWTTestEnabled()) {
+        res.setStatusCode(404);
+        res.json({ error: 'Not Found' });
+        return next();
+    }
+
+    var KeyRef = require('dw/crypto/KeyRef');
+    var CertificateRef = require('dw/crypto/CertificateRef');
+
+    // Use the key/certificate aliases from Business Manager (Administration > Operations > Key Management).
+    var privateKeyAlias = 'jwt-signing-key';
+    var certificateAlias = 'jwt-signing-cert';
+
+    var signOptions = {
+        privateKeyOrSecret: new KeyRef(privateKeyAlias),
+        algorithm: 'RS256',
+        kid: privateKeyAlias
+    };
+
+    var payload = {
+        name: 'john',
+        lastname: 'doe',
+        iss: 'sample-issuer',
+        sub: 'sample subject'
+    };
+
+    var jwtToken = jwt.sign(payload, signOptions);
+    var decodedToken = jwt.decode(jwtToken);
+
+    var verifyOptions = {
+        publicKeyOrSecret: new CertificateRef(certificateAlias)
+    };
+
+    var verified = jwt.verify(jwtToken, verifyOptions);
+
+    res.json({ decodedToken: decodedToken, verified: verified, jwtToken: jwtToken });
+    return next();
+});
+
 server.get('HMAC', function (req, res, next) {
     if (!isJWTTestEnabled()) {
         res.setStatusCode(404);

@@ -6,6 +6,7 @@ var Bytes = require('dw/util/Bytes');
 var Signature = require('dw/crypto/Signature');
 var StringUtils = require('dw/util/StringUtils');
 var Mac = require('dw/crypto/Mac');
+var KeyRef = require('dw/crypto/KeyRef');
 
 var JWTAlgoToSFCCMapping = jwtHelper.JWTAlgoToSFCCMapping;
 
@@ -20,7 +21,12 @@ function signWithRSA(input, privateKey, algorithm) {
     var contentToSignInBytes = new Bytes(input);
 
     var apiSig = new Signature();
-    var signedBytes = apiSig.signBytes(contentToSignInBytes, new Bytes(privateKey), JWTAlgoToSFCCMapping[algorithm]);
+    var signedBytes;
+    if (privateKey instanceof KeyRef) {
+        signedBytes = apiSig.signBytes(contentToSignInBytes, privateKey, JWTAlgoToSFCCMapping[algorithm]);
+    } else {
+        signedBytes = apiSig.signBytes(contentToSignInBytes, new Bytes(privateKey), JWTAlgoToSFCCMapping[algorithm]);
+    }
 
     return Encoding.toBase64(signedBytes);
 }
@@ -87,6 +93,8 @@ function signJWT(payload, options) {
     var privateKeyOrSecret;
     if (options.privateKeyOrSecret && typeof options.privateKeyOrSecret === 'string') {
         privateKeyOrSecret = options.privateKeyOrSecret;
+    } else if (options.privateKeyOrSecret instanceof KeyRef) {
+        privateKeyOrSecret = options.privateKeyOrSecret;
     }
 
     if (!privateKeyOrSecret) {
@@ -96,6 +104,10 @@ function signJWT(payload, options) {
     var signFunction = JWTAlgoToSignMapping[algorithm];
     if (!signFunction) {
         throw new Error(StringUtils.format('No sign function found for supplied algorithm {0}', algorithm));
+    }
+
+    if (signFunction === signWithHMAC && typeof privateKeyOrSecret !== 'string') {
+        throw new Error('HMAC signing requires a shared secret string');
     }
 
     var jwtSignature = signFunction(signature, privateKeyOrSecret, algorithm);

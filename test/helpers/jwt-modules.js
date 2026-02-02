@@ -21,7 +21,8 @@ function loadJwtModules() {
     'dw/util/Bytes': mocks.Bytes,
     'dw/crypto/Signature': mocks.Signature,
     'dw/util/StringUtils': mocks.StringUtils,
-    'dw/crypto/Mac': mocks.Mac
+    'dw/crypto/Mac': mocks.Mac,
+    'dw/crypto/KeyRef': mocks.KeyRef
   });
 
   const verify = proxyquire('../../plugin_jwt/cartridge/scripts/jwt/verify', {
@@ -33,6 +34,7 @@ function loadJwtModules() {
     'dw/crypto/Signature': mocks.Signature,
     'dw/util/StringUtils': mocks.StringUtils,
     'dw/crypto/Mac': mocks.Mac,
+    'dw/crypto/CertificateRef': mocks.CertificateRef,
     '*/cartridge/scripts/helpers/rsaToDer': {
       getRSAPublicKey: function () {
         return null;

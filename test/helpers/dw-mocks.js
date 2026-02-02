@@ -86,6 +86,14 @@ const StringUtils = {
   }
 };
 
+function KeyRef(alias) {
+  this.alias = alias;
+}
+
+function CertificateRef(alias) {
+  this.alias = alias;
+}
+
 function createDwMocks() {
   return {
     Bytes: Bytes,
@@ -93,7 +101,9 @@ function createDwMocks() {
     Mac: Mac,
     Signature: Signature,
     Logger: Logger,
-    StringUtils: StringUtils
+    StringUtils: StringUtils,
+    KeyRef: KeyRef,
+    CertificateRef: CertificateRef
   };
 }
 
