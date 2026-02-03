@@ -43,6 +43,11 @@ describe('plugin_jwt_ec sign/verify', function () {
     expect(header.alg).to.equal('ES256');
     expect(header.kid).to.equal('kid-ec');
 
+    // ES256 signatures are raw R||S where each part is 32 bytes.
+    const sigBytes = jwtHelper.fromBase64Url(parts[2]);
+    expect(sigBytes).to.not.equal(null);
+    expect(sigBytes.buffer.length).to.equal(64);
+
     expect(verifyEcToken(token, publicPem, { issuer: 'issuer', audience: 'aud1' })).to.equal(true);
   });
 
@@ -108,6 +113,64 @@ describe('plugin_jwt_ec sign/verify', function () {
     expect(function () {
       verifyEcToken(token, publicPem, { allowedAlgorithms: ['HS256'] });
     }).to.throw('not supported');
+  });
+
+  it('accepts allowedAlgorithms as a string', function () {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', {
+      namedCurve: 'prime256v1'
+    });
+    const privatePem = privateKey.export({ type: 'pkcs8', format: 'pem' });
+    const publicPem = publicKey.export({ type: 'spki', format: 'pem' });
+
+    const token = signEcToken('ES256', privatePem, {
+      exp: Math.floor(Date.now() / 1000) + 60
+    });
+
+    const verified = verify.verifyJWT(token, {
+      publicKeyOrSecret: publicPem,
+      allowedAlgorithms: 'ES256'
+    });
+
+    expect(verified).to.equal(true);
+  });
+
+  it('returns false for invalid base64url signature characters', function () {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', {
+      namedCurve: 'prime256v1'
+    });
+    const privatePem = privateKey.export({ type: 'pkcs8', format: 'pem' });
+    const publicPem = publicKey.export({ type: 'spki', format: 'pem' });
+
+    const token = signEcToken('ES256', privatePem, {
+      exp: Math.floor(Date.now() / 1000) + 60
+    });
+
+    const parts = token.split('.');
+    parts[2] = '***';
+    expect(verifyEcToken(parts.join('.'), publicPem, {})).to.equal(false);
+  });
+
+  it('returns false for wrong decoded signature length', function () {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', {
+      namedCurve: 'prime256v1'
+    });
+    const privatePem = privateKey.export({ type: 'pkcs8', format: 'pem' });
+    const publicPem = publicKey.export({ type: 'spki', format: 'pem' });
+
+    const token = signEcToken('ES256', privatePem, {
+      exp: Math.floor(Date.now() / 1000) + 60
+    });
+    const parts = token.split('.');
+
+    // Valid base64url which decodes to the wrong size.
+    const wrongSigB64Url = Buffer.from('deadbeef', 'hex')
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/g, '');
+
+    parts[2] = wrongSigB64Url;
+    expect(verifyEcToken(parts.join('.'), publicPem, {})).to.equal(false);
   });
 
   it('signs and verifies ES384 and ES512', function () {

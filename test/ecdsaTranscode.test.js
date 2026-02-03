@@ -57,4 +57,27 @@ describe('ecdsaTranscode', function () {
       ecdsaTranscode.derToJose(badDer, 'ES256');
     }).to.throw('Invalid DER signature');
   });
+
+  it('encodes ES512 DER with long-form SEQUENCE length when needed', function () {
+    const partLen = 66;
+    const r = Buffer.alloc(partLen, 0x01);
+    const s = Buffer.alloc(partLen, 0x02);
+    const jose = new mocks.Bytes(Buffer.concat([r, s]));
+
+    const der = ecdsaTranscode.joseToDer(jose, 'ES512');
+    const derHex = mocks.Encoding.toHex(der);
+
+    // When the SEQUENCE length is > 127, DER uses the long-form length encoding.
+    expect(derHex.substring(0, 4)).to.equal('3081');
+
+    const joseBack = ecdsaTranscode.derToJose(der, 'ES512');
+    expect(mocks.Encoding.toHex(joseBack)).to.equal(mocks.Encoding.toHex(jose));
+  });
+
+  it('throws for unsupported algorithms', function () {
+    const jose = new mocks.Bytes(Buffer.alloc(64, 0));
+    expect(function () {
+      ecdsaTranscode.joseToDer(jose, 'none');
+    }).to.throw('Unsupported ECDSA algorithm');
+  });
 });
