@@ -1,4 +1,4 @@
-# sfcc_jwt
+# plugin_jwt
 An implementation of [JSON Web Tokens](https://www.rfc-editor.org/rfc/rfc7519) for Salesforce Commerce Cloud SFRA.
 
 This repo contains two cartridges:
