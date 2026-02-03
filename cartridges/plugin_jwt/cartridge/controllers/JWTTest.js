@@ -1,16 +1,16 @@
 'use strict';
 
 var server = require('server');
-var Site = require('dw/system/Site');
+var System = require('dw/system/System');
 
 var jwt = require('plugin_jwt');
 
 /**
- * Checks if the JWT test endpoints are enabled.
- * @returns {boolean} True when the custom preference is enabled.
+ * Checks if the JWT test endpoints are enabled for non-production environments.
+ * @returns {boolean} True when the instance is not production.
  */
 function isJWTTestEnabled() {
-    return Site.getCurrent().getCustomPreferenceValue('enableJWTTest') === true;
+    return System.getInstanceType() !== System.PRODUCTION_SYSTEM;
 }
 
 server.get('RSA', function (req, res, next) {
@@ -50,6 +50,23 @@ server.get('RSA', function (req, res, next) {
     return next();
 });
 
+// Mini guide: generate and upload key/cert to Business Manager (Administration > Operations > Private Keys and Certificates)
+// 1) Generate an RSA keypair (>= 2048 bits) and X.509 cert:
+//    openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out jwt-signing.key.pem
+//    openssl req -new -x509 -key jwt-signing.key.pem -sha256 -days 365 \
+//      -subj "/CN=jwt-signing" -out jwt-signing.cert.pem
+// 2) Package private key + cert as PKCS#12 for upload (commonly accepted):
+//    openssl pkcs12 -export -name jwt-signing -inkey jwt-signing.key.pem \
+//      -in jwt-signing.cert.pem -out jwt-signing.p12
+// 3) In BM Private Keys and Certificates, import:
+//    - Private Key (from jwt-signing.p12) -> alias used by KeyRef
+//    - Certificate (from jwt-signing.cert.pem) -> alias used by CertificateRef
+// 4) Use those aliases in code below for signing and verification.
+// Official refs: KeyRef / CertificateRef Script API
+// https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_crypto_KeyRef.html
+// https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_crypto_CertificateRef.html
+// PKCS#12: https://www.rfc-editor.org/rfc/rfc7292
+// X.509: https://www.rfc-editor.org/rfc/rfc5280
 server.get('RSAKeyRef', function (req, res, next) {
     if (!isJWTTestEnabled()) {
         res.setStatusCode(404);
@@ -60,7 +77,7 @@ server.get('RSAKeyRef', function (req, res, next) {
     var KeyRef = require('dw/crypto/KeyRef');
     var CertificateRef = require('dw/crypto/CertificateRef');
 
-    // Use the key/certificate aliases from Business Manager (Administration > Operations > Key Management).
+    // Use the key/certificate aliases from Business Manager (Administration > Operations > Private Keys and Certificates).
     var privateKeyAlias = 'jwt-signing-key';
     var certificateAlias = 'jwt-signing-cert';
 
