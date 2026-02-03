@@ -95,7 +95,12 @@ function createECDSAVerifier(signature, input, publicKey, algorithm) {
         return false;
     }
 
-    var derSignatureBytes = ecdsaTranscode.joseToDer(joseSignatureBytes, algorithm);
+    var derSignatureBytes;
+    try {
+        derSignatureBytes = ecdsaTranscode.joseToDer(joseSignatureBytes, algorithm);
+    } catch (e) {
+        return false;
+    }
     var contentToVerifyInBytes = new Bytes(input);
 
     var apiSig = new Signature();
