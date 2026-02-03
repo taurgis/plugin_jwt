@@ -1,7 +1,7 @@
 'use strict';
 
 var JWT_REGEX = /^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/;
-var SUPPORTED_ALGORITHMS = ['RS256', 'RS384', 'RS512', 'HS256', 'HS384', 'HS512', 'PS256', 'PS384', 'ES256', 'ES384', 'ES512'];
+var SUPPORTED_ALGORITHMS = ['RS256', 'RS384', 'RS512', 'HS256', 'HS384', 'HS512', 'PS256', 'PS384', 'PS512', 'ES256', 'ES384', 'ES512'];
 var Mac = require('dw/crypto/Mac');
 var Encoding = require('dw/crypto/Encoding');
 
@@ -23,6 +23,7 @@ var JWTAlgoToSFCCMapping = {
     HS512: Mac.HMAC_SHA_512,
     PS256: 'SHA256withRSA/PSS',
     PS384: 'SHA384withRSA/PSS',
+    PS512: 'SHA512withRSA/PSS',
     ES256: 'SHA256withECDSA',
     ES384: 'SHA384withECDSA',
     ES512: 'SHA512withECDSA'

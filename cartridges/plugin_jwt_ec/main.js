@@ -1,7 +1,7 @@
 'use strict';
 
-var sign = require('*/cartridge/scripts/jwt/sign.js');
-var verify = require('*/cartridge/scripts/jwt/verify.js');
+var sign = require('~/cartridge/scripts/jwt/sign.js');
+var verify = require('~/cartridge/scripts/jwt/verify.js');
 
 // Reuse decode implementation from base plugin.
 var base = require('plugin_jwt');

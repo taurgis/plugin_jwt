@@ -1,6 +1,6 @@
 'use strict';
 
-var jwtHelper = require('*/cartridge/scripts/jwt/jwtHelper');
+var jwtHelper = require('~/cartridge/scripts/jwt/jwtHelper');
 var jwtDecode = require('plugin_jwt').decode;
 var Bytes = require('dw/util/Bytes');
 var Encoding = require('dw/crypto/Encoding');
@@ -9,7 +9,7 @@ var StringUtils = require('dw/util/StringUtils');
 var Mac = require('dw/crypto/Mac');
 var CertificateRef = require('dw/crypto/CertificateRef');
 
-var ecdsaTranscode = require('*/cartridge/scripts/jwt/ecdsaTranscode');
+var ecdsaTranscode = require('~/cartridge/scripts/jwt/ecdsaTranscode');
 
 var JWTAlgoToSFCCMapping = jwtHelper.JWTAlgoToSFCCMapping;
 
@@ -140,6 +140,7 @@ var JWTAlgoToVerifierMapping = {
     HS512: createHMACVerifier,
     PS256: createRSAVerifier,
     PS384: createRSAVerifier,
+    PS512: createRSAVerifier,
     ES256: createECDSAVerifier,
     ES384: createECDSAVerifier,
     ES512: createECDSAVerifier

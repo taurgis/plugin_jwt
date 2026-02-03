@@ -75,14 +75,33 @@ function normalizeSignatureAlgorithm(algorithm) {
   return map[algorithm] || null;
 }
 
+function getRsaPssParams(algorithm) {
+  const map = {
+    'SHA256withRSA/PSS': { hash: 'sha256', saltLength: 32 },
+    'SHA384withRSA/PSS': { hash: 'sha384', saltLength: 48 },
+    'SHA512withRSA/PSS': { hash: 'sha512', saltLength: 64 }
+  };
+
+  return map[algorithm] || null;
+}
+
 Signature.prototype.signBytes = function (contentBytes, keyBytes, algorithm) {
+  const data = toBuffer(contentBytes);
+  const key = toBuffer(keyBytes).toString('utf8');
+
+  const pssParams = getRsaPssParams(algorithm);
+  if (pssParams) {
+    return new Bytes(crypto.sign(pssParams.hash, data, {
+      key,
+      padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+      saltLength: pssParams.saltLength
+    }));
+  }
+
   const nodeAlg = normalizeSignatureAlgorithm(algorithm);
   if (!nodeAlg) {
     throw new Error(`Unsupported Signature algorithm in tests: ${algorithm}`);
   }
-
-  const data = toBuffer(contentBytes);
-  const key = toBuffer(keyBytes).toString('utf8');
 
   // For ECDSA, SFCC/JCA-style signatures are DER encoded.
   const isEcdsa = String(algorithm).indexOf('ECDSA') !== -1;
@@ -92,14 +111,23 @@ Signature.prototype.signBytes = function (contentBytes, keyBytes, algorithm) {
 };
 
 Signature.prototype.verifyBytesSignature = function (signatureBytes, contentBytes, keyBytes, algorithm) {
+  const data = toBuffer(contentBytes);
+  const signature = toBuffer(signatureBytes);
+  const key = toBuffer(keyBytes).toString('utf8');
+
+  const pssParams = getRsaPssParams(algorithm);
+  if (pssParams) {
+    return crypto.verify(pssParams.hash, data, {
+      key,
+      padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+      saltLength: pssParams.saltLength
+    }, signature);
+  }
+
   const nodeAlg = normalizeSignatureAlgorithm(algorithm);
   if (!nodeAlg) {
     throw new Error(`Unsupported Signature algorithm in tests: ${algorithm}`);
   }
-
-  const data = toBuffer(contentBytes);
-  const signature = toBuffer(signatureBytes);
-  const key = toBuffer(keyBytes).toString('utf8');
 
   const isEcdsa = String(algorithm).indexOf('ECDSA') !== -1;
   const options = isEcdsa ? { key, dsaEncoding: 'der' } : { key };

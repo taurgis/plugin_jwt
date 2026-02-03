@@ -1,7 +1,7 @@
 'use strict';
 
-var jwtHelper = require('*/cartridge/scripts/jwt/jwtHelper');
-var jwtDecode = require('*/cartridge/scripts/jwt/decode');
+var jwtHelper = require('~/cartridge/scripts/jwt/jwtHelper');
+var jwtDecode = require('~/cartridge/scripts/jwt/decode');
 var Bytes = require('dw/util/Bytes');
 var Encoding = require('dw/crypto/Encoding');
 var Signature = require('dw/crypto/Signature');
@@ -112,7 +112,8 @@ var JWTAlgoToVerifierMapping = {
     HS384: createHMACVerifier,
     HS512: createHMACVerifier,
     PS256: createRSAVerifier,
-    PS384: createRSAVerifier
+    PS384: createRSAVerifier,
+    PS512: createRSAVerifier
 };
 
 /**
@@ -159,7 +160,7 @@ function verifyJWT(jwt, options) {
     } else if (config.publicKeyOrSecret && typeof config.publicKeyOrSecret === 'function') {
         var jsonWebKey = config.publicKeyOrSecret(decodedToken);
         if (jsonWebKey && jsonWebKey.modulus && jsonWebKey.exponential) {
-            var keyHelper = require('*/cartridge/scripts/helpers/rsaToDer');
+            var keyHelper = require('~/cartridge/scripts/helpers/rsaToDer');
             publicKeyOrSecret = keyHelper.getRSAPublicKey(jsonWebKey.modulus, jsonWebKey.exponential);
         }
     }

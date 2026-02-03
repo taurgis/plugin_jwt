@@ -1,6 +1,6 @@
 'use strict';
 
-var jwtHelper = require('*/cartridge/scripts/jwt/jwtHelper');
+var jwtHelper = require('~/cartridge/scripts/jwt/jwtHelper');
 var Encoding = require('dw/crypto/Encoding');
 var Bytes = require('dw/util/Bytes');
 var Signature = require('dw/crypto/Signature');
@@ -8,7 +8,7 @@ var StringUtils = require('dw/util/StringUtils');
 var Mac = require('dw/crypto/Mac');
 var KeyRef = require('dw/crypto/KeyRef');
 
-var ecdsaTranscode = require('*/cartridge/scripts/jwt/ecdsaTranscode');
+var ecdsaTranscode = require('~/cartridge/scripts/jwt/ecdsaTranscode');
 
 var JWTAlgoToSFCCMapping = jwtHelper.JWTAlgoToSFCCMapping;
 
@@ -81,6 +81,7 @@ var JWTAlgoToSignMapping = {
     HS512: signWithHMAC,
     PS256: signWithRSA,
     PS384: signWithRSA,
+    PS512: signWithRSA,
     ES256: signWithECDSA,
     ES384: signWithECDSA,
     ES512: signWithECDSA

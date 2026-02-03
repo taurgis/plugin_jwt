@@ -49,7 +49,7 @@ Returns the JsonWebToken as string.
 
 * `privateKeyOrSecret` is a string containing either the secret for HMAC or the private key for RSA/ECDSA, or a `dw.crypto.KeyRef`.
 * `algorithm` is one of:
-	* `plugin_jwt`: `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `PS256`, `PS384`
+	* `plugin_jwt`: `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `PS256`, `PS384`, `PS512`
 	* `plugin_jwt_ec`: all of the above plus `ES256`, `ES384`, `ES512`
 * `kid` is optional and added to the JWT header.
 
@@ -183,6 +183,7 @@ RS384 | RSA using SHA-384 hash algorithm
 RS512 | RSA using SHA-512 hash algorithm
 PS256 | RSA-PSS using SHA-256 hash algorithm
 PS384 | RSA-PSS using SHA-384 hash algorithm
+PS512 | RSA-PSS using SHA-512 hash algorithm
 
 ### plugin_jwt_ec
 
@@ -206,8 +207,10 @@ Three demo endpoints are available in non-production instances only:
 * `JWTTest-RSA` - signs and verifies using inline RSA keys.
 * `JWTTest-RSAKeyRef` - signs with `dw.crypto.KeyRef` and verifies with `dw.crypto.CertificateRef`.
 * `JWTTest-HMAC` - signs and verifies with a shared secret.
+* `JWTTest-Matrix` - signs and verifies all supported HS/RS/PS algorithms in one call.
 
 The controller returns `{ decodedToken, verified, jwtToken }` and is gated by instance type (disabled in production).
+The `JWTTest-Matrix` route returns `{ verified, count, results }` and supports `?includeTokens=true` to include tokens.
 
 ## JWTECTest controller (ECDSA demo)
 

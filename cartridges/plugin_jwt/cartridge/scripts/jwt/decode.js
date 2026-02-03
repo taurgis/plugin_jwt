@@ -1,6 +1,6 @@
 'use strict';
 
-var jwtHelper = require('*/cartridge/scripts/jwt/jwtHelper');
+var jwtHelper = require('~/cartridge/scripts/jwt/jwtHelper');
 var Logger = require('dw/system/Logger');
 
 /**
