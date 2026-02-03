@@ -2,6 +2,7 @@
 
 var jwtHelper = require('~/cartridge/scripts/jwt/jwtHelper');
 var jwtDecode = require('~/cartridge/scripts/jwt/decode');
+var verifyHelpers = require('*/cartridge/scripts/jwt/verifyHelpers');
 var Bytes = require('dw/util/Bytes');
 var Encoding = require('dw/crypto/Encoding');
 var Signature = require('dw/crypto/Signature');
@@ -10,27 +11,6 @@ var Mac = require('dw/crypto/Mac');
 var CertificateRef = require('dw/crypto/CertificateRef');
 
 var JWTAlgoToSFCCMapping = jwtHelper.JWTAlgoToSFCCMapping;
-
-/**
- * Normalizes allowed algorithms into an array.
- * @param {string|Array} algorithms - Allowed algorithms.
- * @returns {Array|null} Array of algorithms or null.
- */
-function normalizeAlgorithms(algorithms) {
-    if (!algorithms) {
-        return null;
-    }
-
-    if (typeof algorithms === 'string') {
-        return [algorithms];
-    }
-
-    if (Array.isArray(algorithms)) {
-        return algorithms;
-    }
-
-    return null;
-}
 
 /**
  * Compares two strings with minimal timing differences.
@@ -141,7 +121,10 @@ function verifyJWT(jwt, options) {
         return false;
     }
 
-    var allowedAlgorithms = normalizeAlgorithms(config.allowedAlgorithms) || jwtHelper.SUPPORTED_ALGORITHMS;
+    var allowedAlgorithms = verifyHelpers.normalizeAlgorithms(config.allowedAlgorithms, jwtHelper.SUPPORTED_ALGORITHMS);
+    if (!allowedAlgorithms) {
+        throw new Error('allowedAlgorithms must be a string or array');
+    }
     if (allowedAlgorithms.indexOf(algorithm) === -1) {
         throw new Error(StringUtils.format('JWT Algorithm {0} not supported', algorithm));
     }
@@ -159,9 +142,13 @@ function verifyJWT(jwt, options) {
         publicKeyOrSecret = config.publicKeyOrSecret;
     } else if (config.publicKeyOrSecret && typeof config.publicKeyOrSecret === 'function') {
         var jsonWebKey = config.publicKeyOrSecret(decodedToken);
-        if (jsonWebKey && jsonWebKey.modulus && jsonWebKey.exponential) {
-            var keyHelper = require('~/cartridge/scripts/helpers/rsaToDer');
-            publicKeyOrSecret = keyHelper.getRSAPublicKey(jsonWebKey.modulus, jsonWebKey.exponential);
+        if (jsonWebKey && (!jsonWebKey.kty || jsonWebKey.kty === 'RSA')) {
+            var modulus = jsonWebKey.modulus || jsonWebKey.n;
+            var exponential = jsonWebKey.exponential || jsonWebKey.e;
+            if (modulus && exponential) {
+                var keyHelper = require('~/cartridge/scripts/helpers/rsaToDer');
+                publicKeyOrSecret = keyHelper.getRSAPublicKey(modulus, exponential);
+            }
         }
     }
 
@@ -184,15 +171,8 @@ function verifyJWT(jwt, options) {
     }
 
     var payload = decodedToken.payload;
-    if (!config.ignoreExpiration) {
-        var jwtExp = payload.exp;
-        // seconds to ms
-        var expirationDate = new Date(jwtExp * 1000);
-        var currentDate = new Date();
-        // expired
-        if (expirationDate < currentDate) {
-            return false;
-        }
+    if (!verifyHelpers.validateTimeClaims(payload, config)) {
+        return false;
     }
 
     if (config.audience) {

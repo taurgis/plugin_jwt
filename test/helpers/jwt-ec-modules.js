@@ -37,6 +37,8 @@ function loadJwtEcModules() {
     'dw/crypto/Encoding': mocks.Encoding
   });
 
+  const verifyHelpers = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/jwt/verifyHelpers', {});
+
   const ecdsaTranscode = proxyquire('../../cartridges/plugin_jwt_ec/cartridge/scripts/jwt/ecdsaTranscode', {
     'dw/crypto/Encoding': mocks.Encoding,
     'dw/util/StringUtils': mocks.StringUtils
@@ -60,6 +62,8 @@ function loadJwtEcModules() {
     '~/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     '*/cartridge/scripts/jwt/ecdsaTranscode': ecdsaTranscode,
     '~/cartridge/scripts/jwt/ecdsaTranscode': ecdsaTranscode,
+    '*/cartridge/scripts/jwt/verifyHelpers': verifyHelpers,
+    '~/cartridge/scripts/jwt/verifyHelpers': verifyHelpers,
     'dw/util/Bytes': mocks.Bytes,
     'dw/crypto/Encoding': mocks.Encoding,
     'dw/crypto/Signature': mocks.Signature,

@@ -65,6 +65,66 @@ describe('verifyJWT', function () {
     expect(result).to.equal(true);
   });
 
+  it('rejects tokens with non-numeric exp', function () {
+    const payload = { exp: 'not-a-number' };
+    const token = signToken(payload);
+
+    const result = verify.verifyJWT(token, {
+      publicKeyOrSecret: 'secret'
+    });
+
+    expect(result).to.equal(false);
+  });
+
+  it('requires exp when requireExpiration is true', function () {
+    const payload = { sub: 'user' };
+    const token = signToken(payload);
+
+    const result = verify.verifyJWT(token, {
+      publicKeyOrSecret: 'secret',
+      requireExpiration: true
+    });
+
+    expect(result).to.equal(false);
+  });
+
+  it('rejects tokens before not-before time', function () {
+    const now = Math.floor(Date.now() / 1000);
+    const payload = { exp: now + 60, nbf: now + 30 };
+    const token = signToken(payload);
+
+    const result = verify.verifyJWT(token, {
+      publicKeyOrSecret: 'secret'
+    });
+
+    expect(result).to.equal(false);
+  });
+
+  it('allows nbf within clock tolerance', function () {
+    const now = Math.floor(Date.now() / 1000);
+    const payload = { exp: now + 60, nbf: now + 30 };
+    const token = signToken(payload);
+
+    const result = verify.verifyJWT(token, {
+      publicKeyOrSecret: 'secret',
+      clockTolerance: 30
+    });
+
+    expect(result).to.equal(true);
+  });
+
+  it('rejects tokens with iat in the future', function () {
+    const now = Math.floor(Date.now() / 1000);
+    const payload = { exp: now + 60, iat: now + 30 };
+    const token = signToken(payload);
+
+    const result = verify.verifyJWT(token, {
+      publicKeyOrSecret: 'secret'
+    });
+
+    expect(result).to.equal(false);
+  });
+
   it('handles audience arrays', function () {
     const payload = {
       exp: Math.floor(Date.now() / 1000) + 60,
@@ -120,6 +180,30 @@ describe('verifyJWT', function () {
         allowedAlgorithms: ['RS256']
       });
     }).to.throw('not supported');
+  });
+
+  it('throws for invalid allowedAlgorithms type', function () {
+    const payload = { exp: Math.floor(Date.now() / 1000) + 60 };
+    const token = signToken(payload);
+
+    expect(function () {
+      verify.verifyJWT(token, {
+        publicKeyOrSecret: 'secret',
+        allowedAlgorithms: { foo: 'bar' }
+      });
+    }).to.throw('allowedAlgorithms must be a string or array');
+  });
+
+  it('throws for invalid clockTolerance', function () {
+    const payload = { exp: Math.floor(Date.now() / 1000) + 60 };
+    const token = signToken(payload);
+
+    expect(function () {
+      verify.verifyJWT(token, {
+        publicKeyOrSecret: 'secret',
+        clockTolerance: -1
+      });
+    }).to.throw('clockTolerance must be a non-negative number');
   });
 
   it('returns false for invalid format', function () {

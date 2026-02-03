@@ -118,7 +118,7 @@ It may throw when an unsupported algorithm is used or when key material is missi
 
 `options`:
 
-* `publicKeyOrSecret` is a string containing either the secret for HMAC algorithms or the public key for RSA/ECDSA, a `dw.crypto.CertificateRef`, or a function that returns a single key. For RSA keys, the function must return `{ modulus, exponential }` (base64url) and the library derives a DER public key. For ECDSA (plugin_jwt_ec), the function may return a JWK with `kty: "EC"`, `x`, `y`, and `crv`.
+* `publicKeyOrSecret` is a string containing either the secret for HMAC algorithms or the public key for RSA/ECDSA, a `dw.crypto.CertificateRef`, or a function that returns a single key. For RSA keys, the function may return standard JWK fields `{ n, e }` (base64url) or `{ modulus, exponential }` (base64url) and the library derives a DER public key. For ECDSA (plugin_jwt_ec), the function may return a JWK with `kty: "EC"`, `x`, `y`, and `crv`.
 	For string public keys, use X.509/SPKI PEM (`-----BEGIN PUBLIC KEY-----`). PKCS#1 PEM is not guaranteed to parse in SFCC.
 
 Example JWK resolver (selects by `kid` and returns a single key):
@@ -129,8 +129,8 @@ function resolveKey(decodedToken) {
 	if (kid === 'rsa-key-1') {
 		return {
 			kty: 'RSA',
-			modulus: 'base64url-n',
-			exponential: 'base64url-e'
+			n: 'base64url-n',
+			e: 'base64url-e'
 		};
 	}
 
@@ -143,9 +143,13 @@ function resolveKey(decodedToken) {
 }
 ```
 * `ignoreExpiration` skips the `exp` check.
+* `requireExpiration` requires a valid numeric `exp` claim.
+* `clockTolerance` allows small clock skew (seconds) for `exp`, `nbf`, and `iat` validation.
 * `audience` checks the JWT `aud` (string or array).
 * `issuer` checks the JWT `iss`.
 * `allowedAlgorithms` is an optional string or array to allowlist acceptable `alg` values.
+
+When present, `nbf` must be in the past and `iat` must not be in the future, allowing `clockTolerance` seconds of skew.
 
 Verify HMAC SHA256
 
@@ -232,7 +236,7 @@ Three demo endpoints are available in non-production instances only:
 * `JWTTest-HMAC` - signs and verifies with a shared secret.
 * `JWTTest-Matrix` - signs and verifies all supported HS/RS/PS algorithms in one call.
 
-The controller returns `{ decodedToken, verified, jwtToken }` and is gated by instance type (disabled in production).
+The controller returns `{ decodedToken, verified }` by default and supports `?includeToken=true` to include `jwtToken`.
 The `JWTTest-Matrix` route returns `{ verified, count, results }` and supports `?includeTokens=true` to include tokens.
 
 ## JWTECTest controller (ECDSA demo)
@@ -244,6 +248,7 @@ An ECDSA-only demo endpoint is available (non-production instances only):
 Example usage:
 
 * `/JWTECTest-KeyRef?alg=ES256&keyAlias=jwt-ec-signing-key&certAlias=jwt-ec-signing-cert`
+* Append `&includeToken=true` to include the signed JWT in the response.
 
 You can generate a local ES256 keypair/cert bundle under `tmp/`:
 
@@ -271,6 +276,7 @@ openssl pkcs12 -export -name jwt-ec-signing-key -inkey tmp/jwt-ec-signing.key.pe
 12. https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_crypto_Signature.html
 13. https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_crypto_Mac.html
 14. https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_system_System.html
+15. https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_crypto_CertificateUtils.html
 
 ## Note
 

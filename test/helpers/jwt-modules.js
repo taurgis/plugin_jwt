@@ -15,6 +15,8 @@ function loadJwtModules() {
     'dw/system/Logger': mocks.Logger
   });
 
+  const verifyHelpers = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/jwt/verifyHelpers', {});
+
   const sign = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/jwt/sign', {
     '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     '~/cartridge/scripts/jwt/jwtHelper': jwtHelper,
@@ -32,6 +34,8 @@ function loadJwtModules() {
     '~/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     '*/cartridge/scripts/jwt/decode': decode,
     '~/cartridge/scripts/jwt/decode': decode,
+    '*/cartridge/scripts/jwt/verifyHelpers': verifyHelpers,
+    '~/cartridge/scripts/jwt/verifyHelpers': verifyHelpers,
     'dw/system/Logger': mocks.Logger,
     'dw/util/Bytes': mocks.Bytes,
     'dw/crypto/Encoding': mocks.Encoding,

@@ -48,6 +48,8 @@ server.get('KeyRef', function (req, res, next) {
         return next();
     }
 
+    var includeToken = String(req.querystring.includeToken || '') === 'true';
+
     var privateKeyAlias = req.querystring.keyAlias || 'jwt-ec-signing-key';
     var certificateAlias = req.querystring.certAlias || 'jwt-ec-signing-cert';
 
@@ -77,14 +79,18 @@ server.get('KeyRef', function (req, res, next) {
 
     var verified = jwt.verify(jwtToken, verifyOptions);
 
-    res.json({
+    var responseData = {
         algorithm: algorithm,
         keyAlias: privateKeyAlias,
         certAlias: certificateAlias,
         decodedToken: decodedToken,
-        verified: verified,
-        jwtToken: jwtToken
-    });
+        verified: verified
+    };
+    if (includeToken) {
+        responseData.jwtToken = jwtToken;
+    }
+
+    res.json(responseData);
 
     return next();
 });
