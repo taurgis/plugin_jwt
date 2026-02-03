@@ -1,5 +1,5 @@
 # sfcc_jwt
-An implementation of [JSON Web Tokens](https://tools.ietf.org/html/rfc7519) for Salesforce Commerce Cloud SFRA.
+An implementation of [JSON Web Tokens](https://www.rfc-editor.org/rfc/rfc7519) for Salesforce Commerce Cloud SFRA.
 
 # Install
 Install the cartridge on server & add it to cartridge path.
@@ -16,11 +16,10 @@ References:
 
 1. https://mochajs.org/#getting-started
 2. https://www.chaijs.com/guide/installation/
-3. https://datatracker.ietf.org/doc/html/rfc7519
-4. https://datatracker.ietf.org/doc/html/rfc7515
-5. https://joseauth.org/modules/jwt_sign.html
-6. https://joseauth.org/modules/jwt_verify.html
-7. https://www.rfc-editor.org/rfc/rfc7518
+3. https://www.rfc-editor.org/rfc/rfc7519
+4. https://www.rfc-editor.org/rfc/rfc7515
+5. https://www.rfc-editor.org/rfc/rfc7518
+6. https://www.rfc-editor.org/rfc/rfc7517
 
 # Usage
 
@@ -28,13 +27,13 @@ References:
 
 Returns the JsonWebToken as string.
 
-`payload` is an object literal representing valid JSON.
+`payload` is an object literal representing valid JSON. The library does not auto-add registered claims.
 
 `options`:
 
-* `privateKeyOrSecret` is a string containing either the secret for HMAC algorithms or the private key for RSA.
-* `algorithm` HS256, RS256 or similar
-* `kid`
+* `privateKeyOrSecret` is a string containing either the secret for HMAC or the private key for RSA, or a `dw.crypto.KeyRef`.
+* `algorithm` is one of: `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `PS256`, `PS384`.
+* `kid` is optional and added to the JWT header.
 
 Sign with HMAC SHA256
 
@@ -55,18 +54,29 @@ options.algorithm = 'RS256';
 var token = jwt.sign({ foo: 'bar' }, options);
 ```
 
+Sign with RSA using a Business Manager private key alias
+```js
+var KeyRef = require('dw/crypto/KeyRef');
+var options = {};
+options.privateKeyOrSecret = new KeyRef('jwt-signing-key');
+options.algorithm = 'RS256';
+options.kid = 'jwt-signing-key';
+var token = jwt.sign({ foo: 'bar' }, options);
+```
+
 ### jwt.verify(token, options)
 
-Returns a boolean signifying if the signature is valid or not.
+Returns `true` when the signature is valid and basic claims checks pass, otherwise `false`.
+It may throw when an unsupported algorithm is used or when key material is missing.
 
 `token` is the JsonWebToken string
 
 `options`:
 
-* `publicKeyOrSecret` is a string containing either the secret for HMAC algorithms or the public key for RSA or a function which will return an appropriate [JSON Web Key Set](https://auth0.com/docs/tokens/concepts/jwks) for a kid. This function should return a modulus & exponential which then will be used to generate a DER format of public key. Note `PKCS#1` is not supported by SFCC, so you'd have to convert your pem to use `X.509/SPKI` format.
-* `ignoreExpiration` is a boolean to skip JWT expiration time verification.
-* `audience` is a string containing JWT audience.
-* `issuer` is a string containing JWT issuer.
+* `publicKeyOrSecret` is a string containing either the secret for HMAC algorithms or the public key for RSA, a `dw.crypto.CertificateRef`, or a function that returns a single key `{ modulus, exponential }` (base64url) for the decoded token.
+* `ignoreExpiration` skips the `exp` check.
+* `audience` checks the JWT `aud` (string or array).
+* `issuer` checks the JWT `iss`.
 * `allowedAlgorithms` is an optional string or array to allowlist acceptable `alg` values.
 
 Verify HMAC SHA256
@@ -90,7 +100,7 @@ var isValid = jwt.verify(token, options);
 
 ### jwt.decode(token, options)
 
-Returns the decoded payload without verifying if the signature is valid.
+Returns `{ header, payload, signature }` without verifying if the signature is valid.
 
 `token` is the JsonWebToken string
 
@@ -114,9 +124,15 @@ PS256 | RSA-PSS using SHA-256 hash algorithm
 PS384 | RSA-PSS using SHA-384 hash algorithm
 
 
-## Example
+## JWTTest controller (demo)
 
-Check `JWTTest.js` controller for SFRA example. Set site preference `enableJWTTest` to `true` to enable the sample endpoints.
+Three demo endpoints are available in non-production instances only:
+
+* `JWTTest-RSA` - signs and verifies using inline RSA keys.
+* `JWTTest-RSAKeyRef` - signs with `dw.crypto.KeyRef` and verifies with `dw.crypto.CertificateRef`.
+* `JWTTest-HMAC` - signs and verifies with a shared secret.
+
+The controller returns `{ decodedToken, verified, jwtToken }` and is gated by instance type (disabled in production).
 
 ## Resources
 
@@ -129,6 +145,11 @@ Check `JWTTest.js` controller for SFRA example. Set site preference `enableJWTTe
 7. https://www.rfc-editor.org/rfc/rfc7517
 8. https://www.rfc-editor.org/rfc/rfc4648
 9. https://www.rfc-editor.org/rfc/rfc8725
+10. https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_crypto_KeyRef.html
+11. https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_crypto_CertificateRef.html
+12. https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_crypto_Signature.html
+13. https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_crypto_Mac.html
+14. https://documentation.b2c.commercecloud.salesforce.com/DOC2/topic/com.demandware.dochelp/DWAPI/scriptapi/html/api/class_dw_system_System.html
 
 ## Note
 
