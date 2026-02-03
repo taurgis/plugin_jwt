@@ -9,7 +9,9 @@
     "lint:fix": "eslint cartridges --fix",
     "test": "mocha \"test/**/*.test.js\"",
     "upload": "sgmf-scripts --upload -- ",
-    "uploadCartridge": "sgmf-scripts --uploadCartridge plugin_jwt"
+    "uploadCartridge:jwt": "sgmf-scripts --uploadCartridge plugin_jwt",
+    "uploadCartridge:ec": "sgmf-scripts --uploadCartridge plugin_jwt_ec",
+    "uploadCartridge": "npm run uploadCartridge:jwt && npm run uploadCartridge:ec"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",

@@ -62,12 +62,49 @@ Mac.prototype.digest = function (inputBytes, secretBytes) {
 
 function Signature() {}
 
-Signature.prototype.signBytes = function () {
-  throw new Error('Signature not implemented in tests');
+function normalizeSignatureAlgorithm(algorithm) {
+  const map = {
+    SHA256withECDSA: 'sha256',
+    SHA384withECDSA: 'sha384',
+    SHA512withECDSA: 'sha512',
+    SHA256withRSA: 'RSA-SHA256',
+    SHA384withRSA: 'RSA-SHA384',
+    SHA512withRSA: 'RSA-SHA512'
+  };
+
+  return map[algorithm] || null;
+}
+
+Signature.prototype.signBytes = function (contentBytes, keyBytes, algorithm) {
+  const nodeAlg = normalizeSignatureAlgorithm(algorithm);
+  if (!nodeAlg) {
+    throw new Error(`Unsupported Signature algorithm in tests: ${algorithm}`);
+  }
+
+  const data = toBuffer(contentBytes);
+  const key = toBuffer(keyBytes).toString('utf8');
+
+  // For ECDSA, SFCC/JCA-style signatures are DER encoded.
+  const isEcdsa = String(algorithm).indexOf('ECDSA') !== -1;
+  const options = isEcdsa ? { key, dsaEncoding: 'der' } : { key };
+
+  return new Bytes(crypto.sign(nodeAlg, data, options));
 };
 
-Signature.prototype.verifyBytesSignature = function () {
-  throw new Error('Signature not implemented in tests');
+Signature.prototype.verifyBytesSignature = function (signatureBytes, contentBytes, keyBytes, algorithm) {
+  const nodeAlg = normalizeSignatureAlgorithm(algorithm);
+  if (!nodeAlg) {
+    throw new Error(`Unsupported Signature algorithm in tests: ${algorithm}`);
+  }
+
+  const data = toBuffer(contentBytes);
+  const signature = toBuffer(signatureBytes);
+  const key = toBuffer(keyBytes).toString('utf8');
+
+  const isEcdsa = String(algorithm).indexOf('ECDSA') !== -1;
+  const options = isEcdsa ? { key, dsaEncoding: 'der' } : { key };
+
+  return crypto.verify(nodeAlg, data, options, signature);
 };
 
 const Logger = {
