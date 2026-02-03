@@ -44,7 +44,9 @@ function loadJwtEcModules() {
 
   const sign = proxyquire('../../cartridges/plugin_jwt_ec/cartridge/scripts/jwt/sign', {
     '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
+    '~/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     '*/cartridge/scripts/jwt/ecdsaTranscode': ecdsaTranscode,
+    '~/cartridge/scripts/jwt/ecdsaTranscode': ecdsaTranscode,
     'dw/crypto/Encoding': mocks.Encoding,
     'dw/util/Bytes': mocks.Bytes,
     'dw/crypto/Signature': mocks.Signature,
@@ -55,7 +57,9 @@ function loadJwtEcModules() {
 
   const verify = proxyquire('../../cartridges/plugin_jwt_ec/cartridge/scripts/jwt/verify', {
     '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
+    '~/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     '*/cartridge/scripts/jwt/ecdsaTranscode': ecdsaTranscode,
+    '~/cartridge/scripts/jwt/ecdsaTranscode': ecdsaTranscode,
     'dw/util/Bytes': mocks.Bytes,
     'dw/crypto/Encoding': mocks.Encoding,
     'dw/crypto/Signature': mocks.Signature,

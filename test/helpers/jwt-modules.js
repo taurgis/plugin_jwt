@@ -11,11 +11,13 @@ function loadJwtModules() {
 
   const decode = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/jwt/decode', {
     '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
+    '~/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     'dw/system/Logger': mocks.Logger
   });
 
   const sign = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/jwt/sign', {
     '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
+    '~/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     'dw/system/Logger': mocks.Logger,
     'dw/crypto/Encoding': mocks.Encoding,
     'dw/util/Bytes': mocks.Bytes,
@@ -27,7 +29,9 @@ function loadJwtModules() {
 
   const verify = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/jwt/verify', {
     '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
+    '~/cartridge/scripts/jwt/jwtHelper': jwtHelper,
     '*/cartridge/scripts/jwt/decode': decode,
+    '~/cartridge/scripts/jwt/decode': decode,
     'dw/system/Logger': mocks.Logger,
     'dw/util/Bytes': mocks.Bytes,
     'dw/crypto/Encoding': mocks.Encoding,
@@ -39,12 +43,18 @@ function loadJwtModules() {
       getRSAPublicKey: function () {
         return null;
       }
+    },
+    '~/cartridge/scripts/helpers/rsaToDer': {
+      getRSAPublicKey: function () {
+        return null;
+      }
     }
   });
 
   const rsaToDer = proxyquire('../../cartridges/plugin_jwt/cartridge/scripts/helpers/rsaToDer', {
     'dw/crypto/Encoding': mocks.Encoding,
-    '*/cartridge/scripts/jwt/jwtHelper': jwtHelper
+    '*/cartridge/scripts/jwt/jwtHelper': jwtHelper,
+    '~/cartridge/scripts/jwt/jwtHelper': jwtHelper
   });
 
   return {
