@@ -118,7 +118,30 @@ It may throw when an unsupported algorithm is used or when key material is missi
 
 `options`:
 
-* `publicKeyOrSecret` is a string containing either the secret for HMAC algorithms or the public key for RSA/ECDSA, a `dw.crypto.CertificateRef`, or a function that returns a single key. For RSA keys, the function must return `{ modulus, exponential }` (base64url).
+* `publicKeyOrSecret` is a string containing either the secret for HMAC algorithms or the public key for RSA/ECDSA, a `dw.crypto.CertificateRef`, or a function that returns a single key. For RSA keys, the function must return `{ modulus, exponential }` (base64url) and the library derives a DER public key. For ECDSA (plugin_jwt_ec), the function may return a JWK with `kty: "EC"`, `x`, `y`, and `crv`.
+	For string public keys, use X.509/SPKI PEM (`-----BEGIN PUBLIC KEY-----`). PKCS#1 PEM is not guaranteed to parse in SFCC.
+
+Example JWK resolver (selects by `kid` and returns a single key):
+
+```js
+function resolveKey(decodedToken) {
+	var kid = decodedToken && decodedToken.header && decodedToken.header.kid;
+	if (kid === 'rsa-key-1') {
+		return {
+			kty: 'RSA',
+			modulus: 'base64url-n',
+			exponential: 'base64url-e'
+		};
+	}
+
+	return {
+		kty: 'EC',
+		crv: 'P-256',
+		x: 'base64url-x',
+		y: 'base64url-y'
+	};
+}
+```
 * `ignoreExpiration` skips the `exp` check.
 * `audience` checks the JWT `aud` (string or array).
 * `issuer` checks the JWT `iss`.
